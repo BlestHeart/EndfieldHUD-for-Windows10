@@ -22,7 +22,9 @@ struct Queue {
 void run(const wchar_t*shader){
  Queue queue;a::OverlayHost host;host.create({L"Hidden Projection workspace lifecycle",0,0,1280,800,{}});n::Renderer renderer;
  renderer.initialize(host.hwnd(),1280,800,{n::Driver::warpForTests,shader,n::RenderTarget::composition});
- const BOOL off=FALSE;hr(DwmSetWindowAttribute(static_cast<HWND>(host.hwnd()),DWMWA_USE_HOSTBACKDROPBRUSH,&off,sizeof(off)));
+ // Windows 10 has no host backdrop attribute; opt in when DWM accepts it and
+ // otherwise keep going: DesktopBackdrop falls back to a composition brush.
+ const BOOL off=FALSE;(void)DwmSetWindowAttribute(static_cast<HWND>(host.hwnd()),DWMWA_USE_HOSTBACKDROPBRUSH,&off,sizeof(off));
  n::DesktopBackdrop backdrop;backdrop.initialize(host.hwnd(),{1280,800,true,false,.75,.63,0},{false});n::LayerRasterizer raster;
  // The HUD's design environment (palette, measurer) the workspace chrome takes.
  t::DesignOverlayOptions designOptions;designOptions.raster.pixelsPerPoint=2;t::DesignOverlayOwner overlay(raster,designOptions);

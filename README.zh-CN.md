@@ -56,7 +56,7 @@
 
 <br>
 
-<img src="docs/media/readme/panels/sub-windows.zh-cn.png" alt="Windows：Windows 11 x64" width="100%">
+<img src="docs/media/readme/panels/sub-windows.zh-cn.png" alt="Windows：Windows 10 2004（build 19041）或更高版本，x64；也支持 Windows 11" width="100%">
 
 <a href="https://github.com/DDDuoDuo/EndfieldHUD/releases/tag/v1.3.1"><img src="docs/media/readme/panels/banner-windows.png" alt="Windows：安装程序（EXE）/ 便携版（ZIP）" width="100%"></a>
 
@@ -134,7 +134,7 @@
 </tr>
 <tr>
 <td><img src="docs/media/readme/panels/chip-windows.zh-cn.png" alt="Windows" width="112"></td>
-<td><b>Windows 11 64 位（x64）</b>，不支持 Windows 10 和 ARM64。需要支持 Direct3D 11 的显卡，以及大约 64 MiB 磁盘空间</td>
+<td><b>Windows 10 2004（build 19041）或更高版本，64 位（x64）</b>，也支持 Windows 11。不支持 ARM64。需要支持 Direct3D 11 的显卡，以及大约 64 MiB 磁盘空间</td>
 </tr>
 </table>
 

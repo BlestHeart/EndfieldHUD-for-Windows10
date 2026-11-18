@@ -56,7 +56,7 @@
 
 <br>
 
-<img src="docs/media/readme/panels/sub-windows.ko.png" alt="Windows: Windows 11 x64" width="100%">
+<img src="docs/media/readme/panels/sub-windows.ko.png" alt="Windows: Windows 10 2004(빌드 19041) 이상, x64; Windows 11 지원" width="100%">
 
 <a href="https://github.com/DDDuoDuo/EndfieldHUD/releases/tag/v1.3.1"><img src="docs/media/readme/panels/banner-windows.png" alt="Windows: 설치 프로그램(EXE) / 포터블(ZIP)" width="100%"></a>
 
@@ -134,7 +134,7 @@
 </tr>
 <tr>
 <td><img src="docs/media/readme/panels/chip-windows.ko.png" alt="Windows" width="112"></td>
-<td><b>Windows 11 64비트(x64)</b>. ARM64와 Windows 10은 지원하지 않아요. Direct3D 11을 지원하는 그래픽 카드와 약 64MiB의 디스크 공간이 필요해요</td>
+<td><b>Windows 10 버전 2004(빌드 19041 이상), 64비트(x64)</b>. Windows 11도 지원해요. ARM64는 지원하지 않아요. Direct3D 11을 지원하는 그래픽 카드와 약 64MiB의 디스크 공간이 필요해요</td>
 </tr>
 </table>
 

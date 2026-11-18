@@ -132,7 +132,10 @@ void Application::Impl::shutdownVisible(){
         if(settingsSaves)need(settingsSaves->flush(),"Settings changes could not be saved");if(eventSaves)eventSaves->flush(now());
     }
     projectionHandoff.cancel();projectionDropRoute(false,now());releaseProjection();backdrop.reset();
-    if(visibleMode())need(backdrop.stats().hostAttributeRestored,"Source preview could not restore its original host-backdrop flag");
+    if(visibleMode()){const auto stats=backdrop.stats();
+        // Windows 10 has no host attribute to restore; only a real Win11
+        // attempt must succeed. The fallback backdrops are released above.
+        need(!stats.hostAttributeRestorationAttempted||stats.hostAttributeRestored,"Source preview could not restore its original host-backdrop flag");}
     if(readerTrace)readerTrace->save(args.dataRoot/"reader-scroll-trace.json");cleanup();if(backdropQueue)backdropQueue->finish();pendingShelfReveal.reset();pendingStorageSettings=false;pendingLink.reset(); // A hand-off still pending at quit is dropped (OverlayController).
 }
 

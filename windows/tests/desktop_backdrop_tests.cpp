@@ -86,16 +86,18 @@ void native(){
     Window window;DesktopBackdropState state{640,480,true,false,.7,.35,1};
     // Fresh HWND creation does not imply a readable/original flag. Establish
     // the baseline with its documented setter, then pass that exact known value.
-    const BOOL original=FALSE;hr(DwmSetWindowAttribute(window.value,DWMWA_USE_HOSTBACKDROPBRUSH,&original,sizeof(original)),L"Backdrop fixture: establish owned HWND's disabled host flag");
+    const BOOL original=FALSE;
+    const bool hostBackdropApi=SUCCEEDED(DwmSetWindowAttribute(window.value,DWMWA_USE_HOSTBACKDROPBRUSH,&original,sizeof(original)));
     const DesktopBackdropInitialization baseline{false};
     {DesktopBackdrop beforeQueue;rejects([&]{beforeQueue.initialize(window.value,state,baseline);},"Absent dispatcher queue rejected without creating a hidden service");}
     Queue queue;DesktopBackdrop backdrop;
     ComPtr<IDCompositionDevice>upperDevice;ComPtr<IDCompositionTarget>upper;ComPtr<IDCompositionVisual>upperRoot;
     hr(DCompositionCreateDevice(nullptr,IID_PPV_ARGS(&upperDevice)),L"Backdrop fixture: create renderer upper composition device");hr(upperDevice->CreateTargetForHwnd(window.value,TRUE,&upper),L"Backdrop fixture: create renderer upper target");hr(upperDevice->CreateVisual(&upperRoot),L"Backdrop fixture: create renderer upper visual");hr(upper->SetRoot(upperRoot.Get()),L"Backdrop fixture: attach renderer upper root");hr(upperDevice->Commit(),L"Backdrop fixture: commit renderer upper target");
     backdrop.initialize(window.value,state,baseline);const auto first=backdrop.stats();
-    check(first.initialized&&first.lowerCompositionTarget&&first.hostBackdropEnabled,"Lower host-brush target coexists with renderer's existing upper target");
+    check(first.initialized&&first.lowerCompositionTarget&&(first.hostBackdropEnabled||first.compositionBackdropEnabled||first.capturedBackdropEnabled||first.tintedBackdropEnabled),"Lower backdrop target coexists with renderer's existing upper target");
     check(!first.originalHostBackdropEnabled&&!first.hostAttributeRestorationAttempted,"Explicit disabled baseline is retained without presumed retrieval");
     check(first.visualAllocations==5&&first.brushAllocations==3,"Backdrop owns a fixed bounded compositor graph");
+    check(hostBackdropApi==first.hostBackdropEnabled,"Host backdrop availability is reported exactly");
     check(!first.materialVisualParityVerified&&!first.radialVisualParityVerified,"API proof makes no source pixel parity claim");
     check(!IsWindowVisible(window.value),"Initialization never shows or activates the test HWND");
     rejects([&]{backdrop.initialize(window.value,state,baseline);},"Duplicate target initialization requires reset");
@@ -112,9 +114,11 @@ void native(){
     const auto last=backdrop.stats();check(last.visualAllocations==first.visualAllocations&&last.brushAllocations==first.brushAllocations,"Fade/theme/size changes keep the same visuals and brushes");
     check(!IsWindowVisible(window.value),"All proof updates remain hidden");
     backdrop.reset();check(!backdrop.stats().initialized,"Explicit reset removes the lower target");
-    auto restored=backdrop.stats();check(restored.hostAttributeRestorationAttempted&&restored.hostAttributeRestored&&restored.hostAttributeRestoreResult==S_OK&&!restored.originalHostBackdropEnabled,"Reset's exact original disabled flag setter succeeds; no unsupported readback is claimed");
-    backdrop.reset();check(backdrop.stats().hostAttributeRestoreResult==restored.hostAttributeRestoreResult&&backdrop.stats().hostAttributeRestored,"Repeated reset preserves the completed restoration evidence");
-    for(unsigned i=0;i<5;++i){
+    auto restored=backdrop.stats();
+    if(first.hostBackdropEnabled)check(restored.hostAttributeRestorationAttempted&&restored.hostAttributeRestored&&restored.hostAttributeRestoreResult==S_OK&&!restored.originalHostBackdropEnabled,"Reset's exact original disabled flag setter succeeds; no unsupported readback is claimed");
+    else check(!restored.hostAttributeRestorationAttempted&&!restored.hostAttributeRestored,"Windows 10 fallback did not touch the unsupported host attribute");
+    backdrop.reset();check(backdrop.stats().hostAttributeRestoreResult==restored.hostAttributeRestoreResult&&backdrop.stats().hostAttributeRestored==restored.hostAttributeRestored,"Repeated reset preserves the completed restoration evidence");
+    if(first.hostBackdropEnabled)for(unsigned i=0;i<5;++i){
         const bool enabled=i%2!=0;const BOOL known=enabled?TRUE:FALSE;
         hr(DwmSetWindowAttribute(window.value,DWMWA_USE_HOSTBACKDROPBRUSH,&known,sizeof(known)),L"Backdrop fixture: establish repeated lifecycle original host flag");
         backdrop.initialize(window.value,state,{enabled});check(backdrop.stats().originalHostBackdropEnabled==enabled,"Caller-established enabled and disabled originals remain distinct");backdrop.reset();restored=backdrop.stats();

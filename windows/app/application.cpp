@@ -532,11 +532,10 @@ void Application::Impl::construct(){
      renderer.initialize(host.hwnd(),metrics.pixelWidth,metrics.pixelHeight,rendererOptions);}startup.mark("renderer-device-target");
     if(visibleMode()){
         backdropQueue=std::make_unique<BackdropQueue>();
-        const BOOL known=FALSE;const auto result=DwmSetWindowAttribute(static_cast<HWND>(host.hwnd()),DWMWA_USE_HOSTBACKDROPBRUSH,&known,sizeof(known));
-        // Without it (before Windows 11 build 22000) the HUD cannot draw its
-        // blurred background: EndfieldHUD.exe reports that Windows 11 is required.
-        if(FAILED(result))throw SystemBackdropUnavailable(static_cast<std::int32_t>(result));
-        backdropState.pixelWidth=metrics.pixelWidth;backdropState.pixelHeight=metrics.pixelHeight;backdrop.initialize(host.hwnd(),backdropState,{false});
+        // DesktopBackdrop uses the Windows 11 host backdrop when the OS
+        // provides DWMWA_USE_HOSTBACKDROPBRUSH and otherwise falls back to a
+        // compositor brush (then a tinted brush) so Windows 10 can start.
+        backdropState.pixelWidth=metrics.pixelWidth;backdropState.pixelHeight=metrics.pixelHeight;backdrop.initialize(host.hwnd(),backdropState);
     }
     startup.mark("lower-system-backdrop");
     // Production isolates each optional module's startup: a failure leaves

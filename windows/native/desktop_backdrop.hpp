@@ -43,13 +43,19 @@ struct DesktopBackdropInitialization {
     // Only set after the caller has successfully established this flag with
     // DwmSetWindowAttribute on its owned HWND. Windows documents
     // DWMWA_USE_HOSTBACKDROPBRUSH for setting, not retrieval. Leaving this empty
-    // requires a successful getter; an unreadable existing state is never
-    // presumed false. In particular, HWND creation alone establishes no state.
+    // attempts the getter and treats an unreadable state as false; the caller
+    // then gets the compositor/tinted Win10 fallback. HWND creation alone
+    // establishes no state.
     std::optional<bool> callerEstablishedHostBackdrop;
 };
 struct DesktopBackdropStats {
     std::uint64_t updates{}, propertyWrites{}, visualAllocations{}, brushAllocations{};
     bool initialized{}, hostBackdropEnabled{}, lowerCompositionTarget{};
+    // Win10 fallback: the host backdrop attribute is unavailable and the
+    // backdrop uses a compositor-visible approximation instead. Exactly one of
+    // hostBackdropEnabled, compositionBackdropEnabled and tintedBackdropEnabled
+    // is true after a successful initialization on a visible window.
+    bool compositionBackdropEnabled{}, capturedBackdropEnabled{}, tintedBackdropEnabled{};
     bool originalHostBackdropEnabled{};
     // Records the exact original-flag setter issued by reset/failure cleanup.
     // Success is the DWM setter contract, not unsupported flag readback.
@@ -65,9 +71,11 @@ struct DesktopBackdropStats {
 };
 
 // Owns the lower (isTopmost=false) composition target of the caller's HWND.
-// Renderer continues to own its existing upper=true target. Requires Win11,
-// caller-owned STA/ASTA + current-thread Windows.System.DispatcherQueue, and a
-// caller HWND using WS_EX_NOREDIRECTIONBITMAP. All calls/destruction stay on that
+// Renderer continues to own its existing upper=true target. The Windows 11
+// host backdrop (DWMWA_USE_HOSTBACKDROPBRUSH) is used when available; Windows
+// 10 falls back to a compositor backdrop brush, then to a tinted brush. Caller
+// requirements: STA/ASTA + current-thread Windows.System.DispatcherQueue and a
+// HWND using WS_EX_NOREDIRECTIONBITMAP. All calls/destruction stay on that
 // thread; reset before HWND destruction or caller DispatcherQueue shutdown.
 // Creates no worker, timer, hook, capture, readback, or app-readable desktop image.
 // DWM transparency and power policies remain authoritative. Uses Windows SDK

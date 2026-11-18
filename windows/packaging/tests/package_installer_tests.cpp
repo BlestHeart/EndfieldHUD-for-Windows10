@@ -755,16 +755,16 @@ void contracts(const fs::path& stub, const fs::path& uninstaller, const fs::path
     run = lab.setup(v1.setup);
     check(run.exit == 3 && outcome(run) == "refused" && run.result["refusal"].string() == "newer-installed", "Downgrade refused: " + describe(run));
     check(lab.snapshot() == before, "A refused downgrade changes nothing");
-    // Below Windows 11 (build 22000) Setup refuses before reading or writing anything.
-    for (const auto* build : {L"19045", L"21999"}) {
+    // Below Windows 10 2004 (build 19041) Setup refuses before reading or writing anything.
+    for (const auto* build : {L"19040", L"0"}) {
         run = lab.setup(v2.setup, {L"--test-windows-build", build});
         check(run.exit == 3 && outcome(run) == "refused" && run.result["refusal"].string() == "unsupported-windows" &&
-              run.result["error"].string().find("Windows 11") != std::string::npos && run.result["error"].string().find(p::narrow(build)) != std::string::npos,
-              "Windows 10 is refused: " + describe(run));
-        check(lab.snapshot() == before, "A refusal below Windows 11 changes nothing");
+              run.result["error"].string().find("Windows 10") != std::string::npos && run.result["error"].string().find(p::narrow(build)) != std::string::npos,
+              "Windows before 10 2004 is refused: " + describe(run));
+        check(lab.snapshot() == before, "A refusal below Windows 10 2004 changes nothing");
     }
-    run = lab.setup(v2.setup, {L"--test-windows-build", L"22000"});
-    check(run.exit == 0 && outcome(run) == "repaired", "Windows 11 build 22000 is supported: " + describe(run));
+    run = lab.setup(v2.setup, {L"--test-windows-build", L"19041"});
+    check(run.exit == 0 && outcome(run) == "repaired", "Windows 10 2004 build 19041 is supported: " + describe(run));
     run = lab.setup(incomplete.setup);
     check(run.exit == 0 && outcome(run) == "upgraded", "Isolated layouts accept developer payloads: " + describe(run));
     run = lab.setup(v2.setup, {L"--allow-downgrade"});

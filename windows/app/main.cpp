@@ -21,8 +21,9 @@
 // written to <data root>/v1/Diagnostics/last-fatal.txt: the exception type, a
 // bounded message with path-like words redacted, the HRESULT and the host
 // stage/module owner that was active (app/fatal_stage.hpp). No document text.
-// Without the host backdrop (Windows before Windows 11 build 22000) the
-// message says that Windows 11 is required.
+// A host backdrop failure (Windows before Windows 11 build 22000) is handled
+// by DesktopBackdrop's Windows 10 fallback; this catch remains for a broken
+// composition stack and reports the minimum supported Windows version.
 #include "app/application.hpp"
 #include "app/application_areas.hpp"
 #include "app/application_modules.hpp"
@@ -108,13 +109,13 @@ constexpr Text displayFailed{"EndfieldHUD could not start its display. Your data
 constexpr Text stoppedByError{"EndfieldHUD stopped because of an error. Your saved data was not changed", "EndfieldHUD 因错误而停止，已保存的数据未被更改",
     "EndfieldHUD 因錯誤而停止，已儲存的資料未被變更", "エラーのため EndfieldHUD が停止しました。保存されたデータは変更されていません",
     "오류로 인해 EndfieldHUD가 중지되었습니다. 저장된 데이터는 변경되지 않았습니다"};
-// Windows has no host backdrop before Windows 11 (build 22000), and the HUD's
-// blurred background needs it.
-constexpr Text windows11Required{"EndfieldHUD requires Windows 11 (build 22000 or later): this version of Windows cannot draw the HUD's blurred background. Your data was not changed",
-    "EndfieldHUD 需要 Windows 11（内部版本 22000 或更高版本）：此版本的 Windows 无法绘制 HUD 的模糊背景。数据未被更改",
-    "EndfieldHUD 需要 Windows 11（組建 22000 或更新版本）：此版本的 Windows 無法繪製 HUD 的模糊背景。資料未被變更",
-    "EndfieldHUD には Windows 11（ビルド 22000 以降）が必要です。このバージョンの Windows では HUD のぼかし背景を描画できません。データは変更されていません",
-    "EndfieldHUD를 사용하려면 Windows 11(빌드 22000 이상)이 필요합니다. 이 버전의 Windows에서는 HUD의 흐림 배경을 그릴 수 없습니다. 데이터는 변경되지 않았습니다"};
+// Windows 10 2004 (build 19041) is the oldest version with the composition
+// stack the Windows port targets; DesktopBackdrop no longer requires Win11.
+constexpr Text windowsVersionRequired{"EndfieldHUD requires Windows 10 version 2004 (build 19041 or later): this version of Windows cannot start the HUD. Your data was not changed",
+    "EndfieldHUD 需要 Windows 10 2004（内部版本 19041 或更高版本）：此版本的 Windows 无法启动 HUD。数据未被更改",
+    "EndfieldHUD 需要 Windows 10 2004（組建 19041 或更新版本）：此版本的 Windows 無法啟動 HUD。資料未被變更",
+    "EndfieldHUD には Windows 10 バージョン 2004（ビルド 19041 以降）が必要です。このバージョンの Windows では HUD を開始できません。データは変更されていません",
+    "EndfieldHUD를 사용하려면 Windows 10 버전 2004(빌드 19041 이상)가 필요합니다. 이 버전의 Windows에서는 HUD를 시작할 수 없습니다. 데이터는 변경되지 않았습니다"};
 void report(const Text& text) {
     MessageBoxW(nullptr, wide(core::translated(text, interfaceLanguage())).c_str(), L"EndfieldHUD", MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
 }
@@ -361,7 +362,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     catch (const app::SystemBackdropUnavailable& e) {
         std::fprintf(stderr, "EndfieldHUD failed: %s (HRESULT %08x)\n", e.what(), static_cast<unsigned>(e.result()));
         writeFatal("SystemBackdropUnavailable", e.what(), static_cast<std::uint32_t>(e.result()));
-        report(windows11Required);
+        report(windowsVersionRequired);
         return 1;
     } catch (const winrt::hresult_error& e) {
         std::fprintf(stderr, "EndfieldHUD failed: HRESULT %08x\n", static_cast<unsigned>(e.code().value));

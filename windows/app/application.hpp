@@ -194,10 +194,9 @@ struct ApplicationOptions {
     double closedGraphicsGrace{closedGraphicsGraceSeconds};
 };
 
-// A visible Application throws this when Windows has no host backdrop
-// (DWMWA_USE_HOSTBACKDROPBRUSH, provided from Windows 11 build 22000), which
-// the HUD's blurred background needs; EndfieldHUD.exe then reports that
-// Windows 11 is required. `result` is DwmSetWindowAttribute's HRESULT.
+// Retained for a composition stack that cannot create any backdrop target;
+// DesktopBackdrop itself falls back to a compositor/tinted backdrop on Windows
+// 10. `result` is DwmSetWindowAttribute's HRESULT when applicable.
 class SystemBackdropUnavailable final : public std::runtime_error {
 public:
     explicit SystemBackdropUnavailable(std::int32_t result)

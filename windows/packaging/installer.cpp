@@ -914,7 +914,7 @@ InstallPlan planInstall(const PayloadManifest& payload, InstallLayout layout, bo
     InstallPlan plan;
     plan.windowsBuild = windowsBuild;
     if (!supportedWindowsBuild(windowsBuild)) {
-        // Nothing is read, repaired or written below Windows 11.
+        // Nothing is read, repaired or written below Windows 10 2004.
         plan.layout = std::move(layout);
         plan.intended = Outcome::refused;
         plan.refusal = Refusal::unsupportedWindows;

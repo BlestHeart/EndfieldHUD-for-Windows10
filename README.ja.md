@@ -56,7 +56,7 @@
 
 <br>
 
-<img src="docs/media/readme/panels/sub-windows.ja.png" alt="Windows：Windows 11 x64" width="100%">
+<img src="docs/media/readme/panels/sub-windows.ja.png" alt="Windows：Windows 10 2004（ビルド 19041）以降、x64；Windows 11 にも対応" width="100%">
 
 <a href="https://github.com/DDDuoDuo/EndfieldHUD/releases/tag/v1.3.1"><img src="docs/media/readme/panels/banner-windows.png" alt="Windows：セットアップ（EXE）/ ポータブル版（ZIP）" width="100%"></a>
 
@@ -134,7 +134,7 @@
 </tr>
 <tr>
 <td><img src="docs/media/readme/panels/chip-windows.ja.png" alt="Windows" width="112"></td>
-<td><b>Windows 11（64 ビット、x64）</b>。Windows 10 と ARM64 には対応していません。Direct3D 11 に対応したグラフィックカードと、約 64 MiB のディスク容量が必要です</td>
+<td><b>Windows 10 バージョン 2004（ビルド 19041 以降）、64 ビット（x64）</b>。Windows 11 にも対応しています。ARM64 には対応していません。Direct3D 11 に対応したグラフィックカードと、約 64 MiB のディスク容量が必要です</td>
 </tr>
 </table>
 

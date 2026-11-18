@@ -280,7 +280,7 @@ Settings Settings::defaults() {
         {"openOnActiveDisplay",true},{"hudDisplayUUID",nullptr},{"hudDisplayName",nullptr},{"launchAtLogin",true},
         {"batteryAlertsEnabled",true},{"devicePopupEnabled",true},{"lowPowerVisualMode",false},{"applicationIcon","endfield"},
         {"clockFormat","twentyFourHour"},{"clockStyle","digital"},{"centerLogo","endfield"},{"centerLogoRevision",nullptr},{"alertMetric","battery"},
-        {"summonShortcut",Json::Object{{"keyCode",50},{"modifiers",1}}},
+        {"summonShortcut",Json::Object{{"keyCode",50},{"modifiers",1}}},{"windowsSummonShortcut",Json::Object{{"virtualKey",192},{"modifiers",2}}},
         {"summonHotkeyEnabled",true},{"recordingMode",false},{"dailyBootLog",true},{"facilityAlerts",true},{"showsCloseHint",true}
     };return result;
 }

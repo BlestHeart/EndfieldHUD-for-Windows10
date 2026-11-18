@@ -127,7 +127,7 @@ struct InstallPlan {
     std::uint32_t windowsBuild{};             // the build the plan was made for
     std::vector<std::string> warnings;
 };
-// Below Windows 11 (supportedWindowsBuild) the plan is refused before
+// Below Windows 10 2004 (supportedWindowsBuild) the plan is refused before
 // anything is read or repaired.
 InstallPlan planInstall(const PayloadManifest&, InstallLayout, bool allowDowngrade, std::uint32_t windowsBuild);
 // The running Windows build (RtlGetVersion, never shimmed by compatibility modes).

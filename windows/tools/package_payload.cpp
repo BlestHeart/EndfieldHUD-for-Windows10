@@ -208,7 +208,7 @@ int report(const Options& o) {
     root["artifacts"] = std::move(artifactRows);
     root["excluded"] = Json::Array{Json("docs/ and docs/media recordings"), Json("debug symbols (*.pdb; separate symbols archive)"),
                                    Json("tests, test fixtures and development tools"), Json("build caches and intermediate shaders"), Json("user data")};
-    root["runtimeDependencies"] = Json::Array{Json("Windows 11 (build 22000 or later), x64; Setup refuses older Windows"),
+    root["runtimeDependencies"] = Json::Array{Json("Windows 10 version 2004 (build 19041) or later, x64; Setup refuses older Windows"),
                                               Json("Visual C++ runtime: statically linked (/MT); no redistributable"),
                                               Json("Microsoft Edge WebView2 Runtime: system component used only by account sign-in; not bundled (Connect explains it and links to Microsoft's download page)"),
                                               Json("Bundled fonts (fonts/) with their OFL licence texts"),

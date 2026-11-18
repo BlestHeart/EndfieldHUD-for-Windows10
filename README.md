@@ -56,7 +56,7 @@
 
 <br>
 
-<img src="docs/media/readme/panels/sub-windows.png" alt="Windows: Windows 11 x64" width="100%">
+<img src="docs/media/readme/panels/sub-windows.png" alt="Windows: Windows 10 2004 (build 19041) or later, x64; Windows 11 supported" width="100%">
 
 <a href="https://github.com/DDDuoDuo/EndfieldHUD/releases/tag/v1.3.1"><img src="docs/media/readme/panels/banner-windows.png" alt="Windows: Setup EXE / Portable ZIP" width="100%"></a>
 
@@ -134,7 +134,7 @@
 </tr>
 <tr>
 <td><img src="docs/media/readme/panels/chip-windows.png" alt="Windows" width="112"></td>
-<td><b>Windows 11, 64-bit (x64)</b>. Windows 10 and ARM64 aren't supported. It needs a Direct3D 11 graphics card and about 64 MiB of disk space.</td>
+<td><b>Windows 10 version 2004 (build 19041) or later, 64-bit (x64)</b>; Windows 11 is also supported. ARM64 isn't supported. It needs a Direct3D 11 graphics card and about 64 MiB of disk space.</td>
 </tr>
 </table>
 

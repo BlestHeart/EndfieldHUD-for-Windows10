@@ -399,8 +399,8 @@ int runInstall(const p::SetupArguments& args, HINSTANCE instance) {
         return static_cast<int>(p::SetupExit::busy);
     }
     p::removeStaleUninstallWorkers(layout.workFolder);
-    // Windows 11 or later (package_format.hpp minimumWindowsBuild); isolated
-    // tests may name the build the plan is made for.
+    // Windows 10 2004 or later (package_format.hpp minimumWindowsBuild);
+    // isolated tests may name the build the plan is made for.
     auto plan = p::planInstall(m, layout, args.allowDowngrade, args.testWindowsBuild.value_or(p::currentWindowsBuild()));
     const auto language = p::setupLanguage(plan.layout);
     if (args.quiet) {

@@ -258,9 +258,9 @@ void arguments() {
         const auto step = static_cast<p::InstallStep>(n);
         check(p::installStepFromName(p::installStepName(step)) == step, "Step names round-trip");
     }
-    // Windows 11 (build 22000) or later; isolated tests name the build.
-    check(!p::supportedWindowsBuild(0) && !p::supportedWindowsBuild(19045) && !p::supportedWindowsBuild(21999) && p::supportedWindowsBuild(22000) &&
-          p::supportedWindowsBuild(26200), "Setup supports Windows 11 (build 22000) or later");
+    // Windows 10 2004 (build 19041) or later; isolated tests name the build.
+    check(!p::supportedWindowsBuild(0) && !p::supportedWindowsBuild(19040) && p::supportedWindowsBuild(19041) && p::supportedWindowsBuild(19045) &&
+          p::supportedWindowsBuild(22000) && p::supportedWindowsBuild(26200), "Setup supports Windows 10 2004 (build 19041) or later");
     const std::vector<std::string_view> isolated{"--test-registry", "Software\\EndfieldHUD-Test-7", "--install-root", "C:\\t\\P", "--programs-folder",
                                                  "C:\\t\\S", "--data-base", "C:\\t\\D"};
     const auto isolatedWith = [&](std::vector<std::string_view> extra) {

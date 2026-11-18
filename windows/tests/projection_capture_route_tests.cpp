@@ -141,7 +141,9 @@ void run(const wchar_t*shader,const std::filesystem::path&resources){
     catch(const n::RendererError&e){if(compositionUnavailable(e.code()))throw Unavailable{};throw;}
     // Application::Impl construction in a visible mode: the owned HWND's host
     // backdrop flag, then the lower system backdrop.
-    const BOOL off=FALSE;hr(DwmSetWindowAttribute(window,DWMWA_USE_HOSTBACKDROPBRUSH,&off,sizeof(off)));
+    // Windows 10 has no host backdrop attribute; opt in when DWM accepts it and
+    // otherwise keep going: DesktopBackdrop falls back to a composition brush.
+    const BOOL off=FALSE;(void)DwmSetWindowAttribute(window,DWMWA_USE_HOSTBACKDROPBRUSH,&off,sizeof(off));
     n::DesktopBackdrop backdrop;backdrop.initialize(window,{metrics.pixelWidth,metrics.pixelHeight,true,false,.5,.5,0},{false});
     n::LayerRasterizer raster;
     // The HUD's design environment the workspace chrome takes (palette, measurer).

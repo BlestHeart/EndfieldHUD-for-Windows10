@@ -197,7 +197,9 @@ int run(const wchar_t*shader,const std::filesystem::path&resources,const Options
     const auto window=static_cast<HWND>(host.hwnd());const auto metrics=host.metrics();scale=metrics.scale;
     n::RendererOptions rendererOptions{n::Driver::hardware,shader,n::RenderTarget::composition,true};rendererOptions.preventDriverThreads=true;
     renderer.initialize(window,metrics.pixelWidth,metrics.pixelHeight,rendererOptions);
-    const BOOL off=FALSE;hr(DwmSetWindowAttribute(window,DWMWA_USE_HOSTBACKDROPBRUSH,&off,sizeof(off)));
+    // Windows 10 has no host backdrop attribute; opt in when DWM accepts it and
+    // otherwise keep going: DesktopBackdrop falls back to a composition brush.
+    const BOOL off=FALSE;(void)DwmSetWindowAttribute(window,DWMWA_USE_HOSTBACKDROPBRUSH,&off,sizeof(off));
     n::DesktopBackdrop backdrop;backdrop.initialize(window,{metrics.pixelWidth,metrics.pixelHeight,true,false,.5,.5,0},{false});
     const n::NotesImageRoute mediaRoute{window,WM_APP+250,1};
     n::NativeNotesImageDecoder decoder([](const auto&)->n::NotesImageAccess{throw std::runtime_error("The probe reads no media");},mediaRoute);

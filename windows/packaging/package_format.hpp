@@ -68,11 +68,11 @@ inline constexpr std::string_view uninstallerExecutable = "uninstall.exe";
 inline constexpr std::string_view installManifestName = "EndfieldHUD.install.json";
 inline constexpr std::string_view thirdPartyNoticesName = "THIRD-PARTY-NOTICES.txt";
 
-// Supported Windows: Windows 11 (build 22000) or later. The HUD's blurred
-// background needs DWMWA_USE_HOSTBACKDROPBRUSH, which Windows provides from
-// build 22000; EndfieldHUD.exe cannot start without it, so Setup refuses to
-// install below it.
-inline constexpr std::uint32_t minimumWindowsBuild = 22000;
+// Supported Windows: Windows 10 version 2004 (build 19041) or later. The HUD
+// uses the Windows 11 host backdrop when available and falls back to a
+// compositor/tinted backdrop on Windows 10; 19041 is the oldest build with the
+// DirectComposition and DispatcherQueue behavior the Windows port targets.
+inline constexpr std::uint32_t minimumWindowsBuild = 19041;
 constexpr bool supportedWindowsBuild(std::uint32_t build) noexcept { return build >= minimumWindowsBuild; }
 
 enum class Encoding : std::uint8_t { identity, lzms };
