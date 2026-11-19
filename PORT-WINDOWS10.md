@@ -1,5 +1,7 @@
 # EndfieldHUD Windows 10 移植说明
 
+> **AI 生成声明：** 本移植版、文档及发布包由 AI 辅助生成，请在使用前自行审阅。
+
 ## 目标
 让上游 EndfieldHUD Windows 端（原本只支持 Windows 11 build 22000+）在 Windows 10 2004（build 19041）及以上运行，同时保留 Windows 11 原有的 host backdrop 体验与全部 HUD 功能。
 
@@ -17,9 +19,9 @@
 ## 构建
 需要 Visual Studio Build Tools 2022（MSVC v143 + Windows SDK 10.0.26100）与 CMake 3.25+。本机验证命令：
 ```bat
-call "F:\VSBuildTools\VC\Auxiliary\Build\vcvars64.bat"
-"G:\CMakePortable\cmake-3.31.6-windows-x86_64\bin\cmake.exe" -S windows -B G:\EndfieldHUD-build\vs -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=ON -DEHUD_RELEASE_ALLOW_INCOMPLETE=ON
-"G:\CMakePortable\cmake-3.31.6-windows-x86_64\bin\cmake.exe" --build G:\EndfieldHUD-build\vs --config Release --target EndfieldHUD --parallel 8
+cmake -S windows -B build -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=ON
+cmake --build build --config Release --target EndfieldHUD --parallel 8
+cmake --build build --config Release --target EndfieldHUD --parallel 8
 ```
 
 ## 验证结果（Windows 10 专业版 22H2 build 19045）
@@ -29,7 +31,7 @@ call "F:\VSBuildTools\VC\Auxiliary\Build\vcvars64.bat"
 - `desktop_backdrop_tests.exe`：PASS 12167 checks。
 
 ## 可运行包
-`G:\EndfieldHUD-release\portable-win10\EndfieldHUD.exe`（资源/字体来自官方 v1.3.1 build21 便携包）。
+`build\release\EndfieldHUD.exe`（资源/字体来自官方 v1.3.1 build21 便携包）。
 
 ## 已知限制
 - Win10 背景是打开 HUD 时截取的静态模糊快照，不是 Win11 的实时 DWM host backdrop；HUD 打开期间如果桌面内容大幅变化，背景不会实时更新。Win11 上仍走原生 host backdrop。
