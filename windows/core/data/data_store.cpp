@@ -276,7 +276,7 @@ Settings Settings::defaults() {
         {"displayMode","whenChargingStarts"},{"displayDuration",3},{"accentHex","FAD41F"},{"theme","dark"},{"scale",1},
         {"placement","topCenter"},{"customScreenID",nullptr},{"customPositionX",.5},{"customPositionY",.9},{"language","system"},
         {"hudScale",1},{"hudOffsetX",0},{"hudOffsetY",0},{"parallaxIntensity",1},{"perspectiveIntensity",1},
-        {"backgroundDarkness",.63},{"blurAmount",.75},{"reduceMotion",false},{"ambientAnimation",true},{"closeOnFocusLost",true},
+        {"backgroundDarkness",.63},{"blurAmount",.75},{"backgroundBlurLive",false},{"reduceMotion",false},{"ambientAnimation",true},{"closeOnFocusLost",true},
         {"openOnActiveDisplay",true},{"hudDisplayUUID",nullptr},{"hudDisplayName",nullptr},{"launchAtLogin",true},
         {"batteryAlertsEnabled",true},{"devicePopupEnabled",true},{"lowPowerVisualMode",false},{"applicationIcon","endfield"},
         {"clockFormat","twentyFourHour"},{"clockStyle","digital"},{"centerLogo","endfield"},{"centerLogoRevision",nullptr},{"alertMetric","battery"},

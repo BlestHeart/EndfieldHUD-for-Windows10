@@ -1909,6 +1909,7 @@ void Application::Impl::updateTrayMenu(){
         if(!state.empty())work+=L" \u2014 "+wide(state);} // AppDelegate.updateWorkMenu: "Work Mode — <state>"
     menu.push_back({gpu::TrayAction::workMode,std::move(work),bool(workMode)});
     menu.push_back({gpu::TrayAction::settings,t("Settings…","设置…"),bool(settingsUI)});
+    menu.push_back({gpu::TrayAction::backgroundBlur,t("Real-time background blur","实时背景模糊"),true,configuration.boolean("backgroundBlurLive")});
     if(power)menu.push_back({gpu::TrayAction::previewCharging,std::move(powerPreview),true});
     menu.push_back({gpu::TrayAction::none,{},false,false,true});
     menu.push_back({gpu::TrayAction::about,t("About EndfieldHUD","关于 EndfieldHUD"),bool(settingsUI)});
@@ -2187,6 +2188,7 @@ void Application::Impl::trayAction(gpu::TrayAction action,bool hotkey,double tim
     case gpu::TrayAction::checkUpdates:perform(settingsModule(core::Module::about),time);if(auto*u=updates())(void)isolateService(UpdateService::key,"update check",[&]{(void)u->check(hostTime(time));});break;
     case gpu::TrayAction::previewCharging:if(auto*p=powerArea())(void)isolateService(power::PowerAreaService::key,"preview",[&]{p->preview(hostTime(time));});break;
     case gpu::TrayAction::workMode:perform(fromProjection?lifecycle.returnFromProjection(time):lifecycle.openWorkMode(time),time);break;
+    case gpu::TrayAction::backgroundBlur:configuration.set("backgroundBlurLive",!configuration.boolean("backgroundBlurLive"));if(settingsSaves)settingsSaves->save(configuration);updateTrayMenu();break;
     default:break;
     }
     if(visibleMode()&&session->phase()!=core::VisibilityPhase::concealed&&!closing&&!stopping){host.show();refresh(time);}
@@ -2291,7 +2293,7 @@ void Application::Impl::applyConfiguration(double time){
     if(configuration.string("theme")=="system"){DWORD light=0,size=sizeof(light);if(RegGetValueW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",L"AppsUseLightTheme",RRF_RT_REG_DWORD,nullptr,&light,&size)==ERROR_SUCCESS)watchAppearance.dark=light==0;}
     const auto hex=configuration.string("accentHex");for(unsigned n=0;n<3;++n)watchAppearance.accentSRGB[n]=std::stoul(hex.substr(n*2,2),nullptr,16)/255.;
     const auto a=watchAppearance.accentSRGB;const auto effective=watchAppearance.dark?a:source::sourceBlackBlend(a,.35);const std::array<double,4>accent{effective[0],effective[1],effective[2],1};
-    backdropState.dark=watchAppearance.dark;backdropState.blurAmount=configuration.number("blurAmount");backdropState.backgroundDarkness=configuration.number("backgroundDarkness");
+    backdropState.dark=watchAppearance.dark;backdropState.blurAmount=configuration.number("blurAmount");backdropState.backgroundDarkness=configuration.number("backgroundDarkness");backdropState.liveCapture=configuration.boolean("backgroundBlurLive");
     // Display > Modules (HUDModuleLayout): order and hidden set, re-read once
     // per applied record (ApplicationHost::moduleLayout, the navigation).
     if(auto layout=configuration.moduleLayout();layout!=moduleLayout){moduleLayout=std::move(layout);++moduleLayoutRevision;}

@@ -37,6 +37,9 @@ struct DesktopBackdropState {
     // ProjectionWorkspace owns its flat darkness/dots layer. Reuse the same
     // system material while removing HUD-specific vignette and tint coloration.
     bool projectionPlane{};
+    // Win10 captured backdrop: true refreshes the capture on the owner's
+    // update calls (real-time-ish, CPU cost); false keeps one snapshot.
+    bool liveCapture{};
     bool operator==(const DesktopBackdropState&) const = default;
 };
 struct DesktopBackdropInitialization {

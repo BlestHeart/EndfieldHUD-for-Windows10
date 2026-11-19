@@ -26,6 +26,9 @@
 #include <winrt/Windows.System.h>
 #include <winrt/Windows.UI.Composition.Desktop.h>
 #include <string>
+#ifndef WDA_EXCLUDEFROMCAPTURE
+#define WDA_EXCLUDEFROMCAPTURE 0x00000011
+#endif
 #endif
 
 namespace endfield::native {
@@ -79,24 +82,25 @@ template<class T>void close(T&value)noexcept{if(value){try{value.Close();}catch(
 void checkResult(HRESULT result,const wchar_t*stage){if(FAILED(result))throw winrt::hresult_error(result,stage);}
 // A downsampled, box-blurred capture of the desktop under the hidden HUD.
 struct BackdropCapture { std::uint32_t width{},height{}; std::vector<std::uint8_t> pixels; };
-bool captureDesktop(HWND window,BackdropCapture& out){
+bool captureDesktop(HWND window,BackdropCapture& out,bool desktopWindow=false){
     RECT rect{};if(!window||!GetWindowRect(window,&rect))return false;
     const int sourceWidth=rect.right-rect.left,sourceHeight=rect.bottom-rect.top;
     if(sourceWidth<=0||sourceHeight<=0)return false;
     constexpr int divisor=8;
     const int width=std::max(1,sourceWidth/divisor),height=std::max(1,sourceHeight/divisor);
-    HDC screen=GetDC(nullptr);if(!screen)return false;
-    HDC memory=CreateCompatibleDC(screen);if(!memory){ReleaseDC(nullptr,screen);return false;}
+    const HWND sourceWindow=desktopWindow?GetDesktopWindow():nullptr;
+    HDC screen=GetDC(sourceWindow);if(!screen)return false;
+    HDC memory=CreateCompatibleDC(screen);if(!memory){ReleaseDC(sourceWindow,screen);return false;}
     BITMAPINFO info{};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);info.bmiHeader.biWidth=width;
     info.bmiHeader.biHeight=-height;info.bmiHeader.biPlanes=1;info.bmiHeader.biBitCount=32;info.bmiHeader.biCompression=BI_RGB;
     void* bits=nullptr;HBITMAP bitmap=CreateDIBSection(screen,&info,DIB_RGB_COLORS,&bits,nullptr,0);
-    if(!bitmap||!bits){if(bitmap)DeleteObject(bitmap);DeleteDC(memory);ReleaseDC(nullptr,screen);return false;}
+    if(!bitmap||!bits){if(bitmap)DeleteObject(bitmap);DeleteDC(memory);ReleaseDC(sourceWindow,screen);return false;}
     const auto previous=SelectObject(memory,bitmap);
     SetStretchBltMode(memory,HALFTONE);SetBrushOrgEx(memory,0,0,nullptr);
     const BOOL copied=StretchBlt(memory,0,0,width,height,screen,rect.left,rect.top,sourceWidth,sourceHeight,SRCCOPY|CAPTUREBLT);
     if(copied){out.width=static_cast<std::uint32_t>(width);out.height=static_cast<std::uint32_t>(height);
         out.pixels.assign(static_cast<std::uint8_t*>(bits),static_cast<std::uint8_t*>(bits)+static_cast<std::size_t>(width)*height*4);}
-    SelectObject(memory,previous);DeleteObject(bitmap);DeleteDC(memory);ReleaseDC(nullptr,screen);return copied!=FALSE;
+    SelectObject(memory,previous);DeleteObject(bitmap);DeleteDC(memory);ReleaseDC(sourceWindow,screen);return copied!=FALSE;
 }
 void blurCapture(BackdropCapture& capture){
     if(capture.width<2||capture.height<2)return;
@@ -142,6 +146,7 @@ struct DesktopBackdrop::Impl {
     ComPtr<ID3D11Device> captureDevice;ComPtr<ID3D11DeviceContext> captureContext;
     wc::CompositionGraphicsDevice graphicsDevice{nullptr};wc::CompositionDrawingSurface drawingSurface{nullptr};
     wc::CompositionSurfaceBrush captureBrush{nullptr};std::uint32_t captureWidth{},captureHeight{};
+    bool captureExcluded{};std::uint64_t lastLiveCapture{};
     wc::CompositionRadialGradientBrush vignetteBrush{nullptr};
     wc::LayerVisual panel{nullptr};wc::SpriteVisual foreground{nullptr};
     wc::CompositionSurfaceBrush foregroundBrush{nullptr};wc::ICompositionSurface foregroundSurface{nullptr};
@@ -173,10 +178,21 @@ struct DesktopBackdrop::Impl {
             counts.hostAttributeRestoreResult=static_cast<std::int32_t>(result);
             counts.hostAttributeRestored=SUCCEEDED(result);
         }
-        window=nullptr;changedAttribute=false;hostBackdrop=false;compositionFallback=false;capturedFallback=false;tintedFallback=false;
+        window=nullptr;changedAttribute=false;hostBackdrop=false;compositionFallback=false;capturedFallback=false;tintedFallback=false;captureExcluded=false;lastLiveCapture=0;
         counts.initialized=counts.hostBackdropEnabled=counts.compositionBackdropEnabled=counts.capturedBackdropEnabled=counts.tintedBackdropEnabled=counts.lowerCompositionTarget=false;
     }
     ~Impl(){clear();}
+    bool drawCapturedSurface(const BackdropCapture& capture){
+        const auto surfaceInterop=drawingSurface.as<ABI::Windows::UI::Composition::ICompositionDrawingSurfaceInterop>();
+        ComPtr<ID2D1DeviceContext> context;POINT offset{};
+        checkResult(surfaceInterop->BeginDraw(nullptr,__uuidof(ID2D1DeviceContext),reinterpret_cast<void**>(context.GetAddressOf()),&offset),L"Backdrop: begin drawing the captured desktop");
+        D2D1_BITMAP_PROPERTIES properties{};properties.pixelFormat=D2D1_PIXEL_FORMAT{DXGI_FORMAT_B8G8R8A8_UNORM,D2D1_ALPHA_MODE_IGNORE};properties.dpiX=properties.dpiY=96;
+        ComPtr<ID2D1Bitmap> bitmap;
+        checkResult(context->CreateBitmap(D2D1_SIZE_U{capture.width,capture.height},capture.pixels.data(),capture.width*4,&properties,bitmap.GetAddressOf()),L"Backdrop: create captured bitmap");
+        context->DrawBitmap(bitmap.Get(),D2D1_RECT_F{0,0,static_cast<float>(capture.width),static_cast<float>(capture.height)},1.0f,D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,nullptr);
+        checkResult(surfaceInterop->EndDraw(),L"Backdrop: end drawing the captured desktop");
+        captureWidth=capture.width;captureHeight=capture.height;return true;
+    }
     bool createCapturedBackdrop(const DesktopBackdropState&state){
         BackdropCapture capture;if(!captureDesktop(window,capture))return false;blurCapture(capture);
         const HRESULT deviceResult=D3D11CreateDevice(nullptr,D3D_DRIVER_TYPE_HARDWARE,nullptr,
@@ -196,16 +212,14 @@ struct DesktopBackdrop::Impl {
         drawingSurface=graphicsDevice.CreateDrawingSurface(winrt::Windows::Foundation::Size{static_cast<float>(capture.width),static_cast<float>(capture.height)},
             winrt::Windows::Graphics::DirectX::DirectXPixelFormat::B8G8R8A8UIntNormalized,
             winrt::Windows::Graphics::DirectX::DirectXAlphaMode::Premultiplied);
-        const auto surfaceInterop=drawingSurface.as<ABI::Windows::UI::Composition::ICompositionDrawingSurfaceInterop>();
-        ComPtr<ID2D1DeviceContext> context;POINT offset{};
-        checkResult(surfaceInterop->BeginDraw(nullptr,__uuidof(ID2D1DeviceContext),reinterpret_cast<void**>(context.GetAddressOf()),&offset),L"Backdrop: begin drawing the captured desktop");
-        D2D1_BITMAP_PROPERTIES properties{};properties.pixelFormat=D2D1_PIXEL_FORMAT{DXGI_FORMAT_B8G8R8A8_UNORM,D2D1_ALPHA_MODE_IGNORE};properties.dpiX=properties.dpiY=96;
-        ComPtr<ID2D1Bitmap> bitmap;
-        checkResult(context->CreateBitmap(D2D1_SIZE_U{capture.width,capture.height},capture.pixels.data(),capture.width*4,&properties,bitmap.GetAddressOf()),L"Backdrop: create captured bitmap");
-        context->DrawBitmap(bitmap.Get(),D2D1_RECT_F{0,0,static_cast<float>(capture.width),static_cast<float>(capture.height)},1.0f,D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,nullptr);
-        checkResult(surfaceInterop->EndDraw(),L"Backdrop: end drawing the captured desktop");
+        if(!drawCapturedSurface(capture))return false;
         captureBrush=compositor.CreateSurfaceBrush(drawingSurface);captureBrush.Stretch(wc::CompositionStretch::Fill);blur.Brush(captureBrush);
-        captureWidth=capture.width;captureHeight=capture.height;return true;
+        return true;
+    }
+    bool refreshCapturedBackdrop(){
+        BackdropCapture capture;if(!captureDesktop(window,capture,true))return false;blurCapture(capture);
+        if(!drawCapturedSurface(capture))return false;
+        lastLiveCapture=GetTickCount64();return true;
     }
     void apply(const DesktopBackdropState&next,bool initial){
         if(initial||next.pixelWidth!=state.pixelWidth||next.pixelHeight!=state.pixelHeight){const winrt::Windows::Foundation::Numerics::float2 size{static_cast<float>(next.pixelWidth),static_cast<float>(next.pixelHeight)};root.Size(size);++counts.propertyWrites;
@@ -309,8 +323,11 @@ void DesktopBackdrop::initialize(void*handle,const DesktopBackdropState&state,co
 bool DesktopBackdrop::update(const DesktopBackdropState&state){
     auto&i=*impl_;i.onThread();validate(state);need(i.counts.initialized,"Backdrop is not initialized");
     if(i.rendererSurface)need(i.rendererSurface->valid()&&i.rendererSurface->width()==state.pixelWidth&&i.rendererSurface->height()==state.pixelHeight&&state.projectionPlane,"Resize the Projection renderer before updating its bridged backdrop");
-    if(i.state==state)return false;
-    try{i.apply(state,false);}catch(...){i.clear();throw;}return true;
+    const auto liveDue=[&]{return state.liveCapture&&i.capturedFallback&&IsWindowVisible(i.window)&&GetTickCount64()-i.lastLiveCapture>=100;};
+    if(i.state==state){if(liveDue()&&i.refreshCapturedBackdrop())return true;return false;}
+    try{i.apply(state,false);}catch(...){i.clear();throw;}
+    if(liveDue())try{(void)i.refreshCapturedBackdrop();}catch(...){}
+    return true;
 }
 bool DesktopBackdrop::attachForeground(Renderer&renderer){
     auto&i=*impl_;i.onThread();need(i.counts.initialized&&i.state.projectionPlane,"Foreground bridge requires an initialized Projection backdrop");

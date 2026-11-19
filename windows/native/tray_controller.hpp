@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace endfield::native {
-enum class TrayAction:unsigned {none,openOverlay,workMode,settings,previewCharging,checkUpdates,about,quit};
+enum class TrayAction:unsigned {none,openOverlay,workMode,settings,previewCharging,checkUpdates,about,backgroundBlur,quit};
 struct TrayMenuItem {TrayAction action{};std::wstring label;bool enabled{true},checked{},separator{};};
 struct TrayHotkey {UINT modifiers{},key{};bool operator==(const TrayHotkey&)const=default;};
 bool validTrayHotkey(TrayHotkey)noexcept;

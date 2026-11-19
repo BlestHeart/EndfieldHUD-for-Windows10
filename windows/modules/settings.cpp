@@ -43,6 +43,9 @@ SettingsController::Layout SettingsController::layout(const Settings&s){return {
 void SettingsController::applyLayout(Settings&s,Layout l){s.set("hudScale",l.scale);s.set("hudOffsetX",l.x);s.set("hudOffsetY",l.y);}
 Settings SettingsController::normalize(Settings value){
     need(value.fields.isObject(),"Settings record must be an object");const auto defaults=Settings::defaults();
+    // Older Windows records predate the live-background switch: default it to
+    // the snapshot mode they already used rather than rejecting the record.
+    if(value.fields["backgroundBlurLive"].isNull())value.set("backgroundBlurLive",defaults.fields["backgroundBlurLive"]);
     for(const auto&[key,expected]:defaults.fields.object()){const auto&actual=std::as_const(value.fields)[key];need(expected.isNull()||(expected.isString()&&actual.isString())||(expected.isNumber()&&actual.isNumber())||(expected.isBool()&&actual.isBool())||(expected.isObject()&&actual.isObject()),"Settings record has a missing or invalid known field");}
     const auto clamp=[&](const char*key,double low,double high,double fallback){const auto n=value.number(key);value.set(key,std::isfinite(n)?std::clamp(n,low,high):fallback);};
     clamp("displayDuration",1,60,3);clamp("scale",.65,1.6,1);clamp("hudScale",.2,2,1);clamp("hudOffsetX",-.5,.5,0);clamp("hudOffsetY",-.5,.5,0);clamp("parallaxIntensity",0,2,1);clamp("perspectiveIntensity",0,2,1);clamp("backgroundDarkness",0,1,.63);clamp("blurAmount",0,1,.75);clamp("customPositionX",0,1,.5);clamp("customPositionY",0,1,.9);
